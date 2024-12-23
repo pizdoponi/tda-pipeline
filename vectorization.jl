@@ -50,3 +50,45 @@ function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landsc
 
     return L, x_values
 end
+
+
+"""
+    flatten_landscapes(persistent_landscapes::Matrix{Float64})
+
+Flatten the matrix of persistent landscapes into a vector.
+If the input matrix is of size `(n, m)`, the output vector will be of size `n * m`.
+This retains all the information in the input matrix, but the output is a vector,
+which is the desired format needed for machine learning (clustering).
+
+# Arguments
+- `persistent_landscapes::Matrix{Float64}`: A matrix of persistent landscapes.
+  Obtained from `calculate_persistent_landscapes`.
+"""
+function flatten_landscapes(persistent_landscapes::Matrix{Float64})::Vector{Float64}
+    n, m = size(persistent_landscapes)
+    return reshape(persistent_landscapes, n * m)
+end
+
+
+"""
+    aggregate_landscapes(persistent_landscapes::Matrix{Float64}, aggr::Union{"mean", "max"}="mean")
+
+Aggregate the persistent landscapes into a single landscape,
+using an aggregation method specified by `aggr`, either "mean" or "max".
+The output is a vector of size `m`, where `m` is the number of landscapes in the input matrix.
+
+# Arguments
+- `persistent_landscapes::Matrix{Float64}`: A matrix of persistent landscapes.
+  Obtained from `calculate_persistent_landscapes`.
+- `aggr::Union{"mean", "max"}`: Aggregation method. Default is "mean".
+"""
+function aggregate_landscapes(persistent_landscapes::Matrix{Float64}, aggr::Union{"mean", "max"}="mean")::Vector{Float64}
+    if aggr == "mean"
+        return mean(persistent_landscapes, dims=1)
+    elseif aggr == "max"
+        return maximum(persistent_landscapes, dims=1)
+    else
+        throw(ArgumentError("Invalid aggregation method: $aggr"))
+    end
+
+end
