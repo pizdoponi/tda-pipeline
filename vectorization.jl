@@ -1,6 +1,16 @@
 using PersistenceDiagrams
 
-function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int; resolution=1000)
+"""
+    calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int, resolution=1000)
+
+Compute the first `num_landscapes` persistent landscapes from a persistence diagram.
+
+# Arguments
+- `diagram::PersistenceDiagram`: A persistent diagram object from `PersistenceDiagrams.jl`.
+- `num_landscapes::Int`: The number of landscapes to compute.
+- `resolution`: The number of points to sample the landscapes. Default is 100.
+"""
+function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int; resolution=100)::Matrix{Float64}
     num_intervals = length(diagram)
     @assert num_intervals >= num_landscapes "Number of intervals in diag is less than n."
 
