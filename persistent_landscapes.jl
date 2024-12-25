@@ -10,11 +10,12 @@ Compute the first `num_landscapes` persistent landscapes from a persistence diag
 - `num_landscapes::Int`: The number of landscapes to compute.
 - `resolution`: The number of points to sample the landscapes. Default is 100.
 """
-function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int; resolution=100)::Matrix{Float64}
+function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int; resolution=100)::Tuple{Matrix{Float64}, StepRangeLen}
     num_intervals = length(diagram)
     @assert num_intervals >= num_landscapes "Number of intervals in diag is less than n."
 
-    intervals = [(d.birth, d.death) for d in diagram]
+    finite_upper_bound = 1e9
+    intervals = [(d.birth, isfinite(d.death) ? d.death : finite_upper_bound) for d in diagram]
 
     # determine the global min birth and max death for the sampling range
     bmin = minimum(i -> i[1], intervals)
@@ -82,13 +83,12 @@ The output is a vector of size `m`, where `m` is the number of landscapes in the
   Obtained from `calculate_persistent_landscapes`.
 - `aggr::Union{"mean", "max"}`: Aggregation method. Default is "mean".
 """
-function aggregate_landscapes(persistent_landscapes::Matrix{Float64}, aggr::Union{"mean", "max"}="mean")::Vector{Float64}
+function aggregate_landscapes(persistent_landscapes::Matrix{Float64}, aggr::String="mean")::Vector{Float64}
     if aggr == "mean"
-        return mean(persistent_landscapes, dims=1)
+        return vec(mean(persistent_landscapes, dims=1))
     elseif aggr == "max"
-        return maximum(persistent_landscapes, dims=1)
+        return vec(maximum(persistent_landscapes, dims=1))
     else
         throw(ArgumentError("Invalid aggregation method: $aggr"))
     end
-
 end
