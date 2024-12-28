@@ -39,8 +39,14 @@ function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landsc
     @assert num_intervals >= num_landscapes "Number of intervals in diag is less than n."
 
     # set the upper bound for infinite death values, used for sampling
-    max_finite_death = maximum(d.death for d in diagram if isfinite(d.death))
-    finite_upper_bound = 2 * max_finite_death
+    finite_deaths = [d.death for d in diagram if isfinite(d.death)]
+    if isempty(finite_deaths)
+        min_birth = minimum(d.birth for d in diagram)
+        finite_upper_bound = min_birth + 1
+    else
+        max_finite_death = maximum(finite_deaths)
+        finite_upper_bound = 2 * max_finite_death
+    end
 
     intervals = [(d.birth, isfinite(d.death) ? d.death : finite_upper_bound) for d in diagram]
 
