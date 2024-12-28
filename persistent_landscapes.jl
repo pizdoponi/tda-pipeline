@@ -1,6 +1,30 @@
 using PersistenceDiagrams
 
 """
+    vectorize_persisten_homology_using_persistent_landscapes(persistent_homology::Vector{PersistenceDiagram}, num_landscapes::Int=10, resolution::Int=10)
+
+Vectorize a persistent homology using persistent landscapes.
+
+Persistent homology is a vector of persistence diagrams.
+For each persistence diagram, persistent landscapes are computed.
+These persistent landscapes are then flattened into a single vector.
+This vector represents the vectorization of that persistant diagram.
+Finally, all the vectors are concatenated into a single vector.
+That is: the vectorizations of inividual persistence diagrams are concatenated into a single vector,
+which is the vectorization of the entire persistent homology.
+"""
+function vectorize_persistent_homology_using_persistent_landscapes(persistent_homology::Vector{PersistenceDiagram}, num_landscapes::Int=10, resolution::Int=10)::Vector{Float32}
+    persistent_landscapes_vectors = []
+    for pd in persistent_homology
+        landscapes, _ = calculate_persistent_landscapes(pd, num_landscapes, resolution=resolution)
+        flat_landscapes = flatten_landscapes(landscapes)
+        push!(persistent_landscapes_vectors, flat_landscapes)
+    end
+    return vcat(persistent_landscapes_vectors...)
+end
+
+
+"""
     calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int, resolution=1000)
 
 Compute the first `num_landscapes` persistent landscapes from a persistence diagram.
