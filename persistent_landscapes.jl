@@ -10,11 +10,14 @@ Compute the first `num_landscapes` persistent landscapes from a persistence diag
 - `num_landscapes::Int`: The number of landscapes to compute.
 - `resolution`: The number of points to sample the landscapes. Default is 100.
 """
-function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int; resolution=100)::Tuple{Matrix{Float64}, StepRangeLen}
+function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landscapes::Int; resolution=100)::Tuple{Matrix{Float64},StepRangeLen}
     num_intervals = length(diagram)
     @assert num_intervals >= num_landscapes "Number of intervals in diag is less than n."
 
-    finite_upper_bound = 1e9
+    # set the upper bound for infinite death values, used for sampling
+    max_finite_death = maximum(d.death for d in diagram if isfinite(d.death))
+    finite_upper_bound = 2 * max_finite_death
+
     intervals = [(d.birth, isfinite(d.death) ? d.death : finite_upper_bound) for d in diagram]
 
     # determine the global min birth and max death for the sampling range
