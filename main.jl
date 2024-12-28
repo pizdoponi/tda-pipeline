@@ -2,39 +2,35 @@
 # │                        load data                         │
 # ╰──────────────────────────────────────────────────────────╯
 
-include("load_data.jl")
+include("read_and_edit_data.jl")
 
-data = load_data("");
-
-# TODO: make the pipeline work for more point clouds, not just one
-# (the original whole data)
-point_clouds::Vector{Vector{Float32}} = []
-for i in 1:5:size(data, 1)
-    push!(point_clouds, data[i:min(i + 4, size(data, 1)), :])
-end
+data_matrix, country_labels, g = get_data()
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                        filtration                        │
 # ╰──────────────────────────────────────────────────────────╯
 
-# ── rips ──────────────────────────────────────────────────────────────
-
 using Random
 using Plots
 using Ripserer
 
-include("read_and_edit_data.jl")
 include("filtration.jl")
 
-data_matrix, country_labels, g = get_data()
+barcodes = []
+persistent_diagrams = []
 
-bs = []
+num_sampled_points = 6
+sampled_points = []
+
+for i in 1:num_sampled_points
+    push!(sampled_points, rand(1:nv(g)))
+end
 
 for i in 1:6
 
-    current_start = rand(1:nv(g))
+    sampled_point = sampled_points[i]
 
-    filtration = create_filtration(g, current_start)
+    filtration = create_filtration(g, sampled_point)
     K = Custom(collect(filtration))
     ph = ripserer(K)
 
@@ -47,26 +43,17 @@ for i in 1:6
     #     serialize(file, ph)
     # end
 
-    country_name = country_labels[current_start]
+    country_name = country_labels[sampled_point]
     b = barcode(ph)
-
     title!("$country_name")
-    push!(bs, b)
+
+    push!(barcodes, b)
+    push!(persistent_diagrams, ph)
 
 end
 
-plot(bs[1], bs[2], bs[3], bs[4], bs[5], bs[6], layout=(3, 2))  # 3 rows, 2 columns
+plot(barcodes[1], barcodes[2], barcodes[3], barcodes[4], barcodes[5], barcodes[6], layout=(3, 2))  # 3 rows, 2 columns
 
-# ── geodesic ──────────────────────────────────────────────────────────
-# TODO: @rok implement this
-
-# ╭──────────────────────────────────────────────────────────╮
-# │                    persistent diagram                    │
-# ╰──────────────────────────────────────────────────────────╯
-
-using PersistenceDiagrams
-
-pd1 = PersistenceDiagram(diag0)
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                      vectorization                       │
@@ -83,8 +70,14 @@ pd1 = PersistenceDiagram(diag0)
 
 include("persistent_landscapes.jl")
 
-landscapes, xs = calculate_persistent_landscapes(pd1, 10)
-landscape_vectors = flatten_landscapes(landscapes)
+vectors::Vector{Vector{Float32}} = []
+
+for i in 1:6
+    println("Vectorizing homology $i at index $(sampled_points[i]), country: $(country_labels[sampled_points[i]])")
+    persistent_homology = persistent_diagrams[i]
+    vectorized_homology = vectorize_persistent_homology_using_persistent_landscapes(persistent_homology, 2)
+    push!(vectors, vectorized_homology)
+end
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                        clustering                        │
