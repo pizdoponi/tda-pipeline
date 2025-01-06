@@ -41,11 +41,13 @@ function calculate_persistent_landscapes(diagram::PersistenceDiagram, num_landsc
     # set the upper bound for infinite death values, used for sampling
     finite_deaths = [d.death for d in diagram if isfinite(d.death)]
     if isempty(finite_deaths)
-        min_birth = minimum(d.birth for d in diagram)
-        finite_upper_bound = min_birth + 1
+        # if there are no finite deaths, that means all deaths are infinite
+        # in this case, we can set the upper bound to be the max birth value + 1
+        max_birth = maximum(d.birth for d in diagram)
+        finite_upper_bound = max_birth + 1
     else
         max_finite_death = maximum(finite_deaths)
-        finite_upper_bound = 2 * max_finite_death
+        finite_upper_bound = max_finite_death + 1
     end
 
     intervals = [(d.birth, isfinite(d.death) ? d.death : finite_upper_bound) for d in diagram]
